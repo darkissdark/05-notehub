@@ -3,7 +3,7 @@ import * as Yup from "yup";
 import { createNote } from "../../services/noteService";
 import type { NoteTag } from "../../types/note";
 import css from "./NoteForm.module.css";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface NoteFormProps {
   onSuccess: () => void;
@@ -21,6 +21,17 @@ const validationSchema = Yup.object({
 const NoteForm = ({ onSuccess, onCancel }: NoteFormProps) => {
   const queryClient = useQueryClient();
 
+  const { mutate } = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error("Create note failed:", error);
+    },
+  });
+
   return (
     <Formik<{
       title: string;
@@ -29,17 +40,10 @@ const NoteForm = ({ onSuccess, onCancel }: NoteFormProps) => {
     }>
       initialValues={{ title: "", content: "", tag: "Todo" }}
       validationSchema={validationSchema}
-      onSubmit={async (values, { setSubmitting, resetForm }) => {
-        try {
-          await createNote(values);
-          queryClient.invalidateQueries({ queryKey: ["notes"] });
-          resetForm();
-          onSuccess();
-        } catch (e) {
-          console.error(e);
-        } finally {
-          setSubmitting(false);
-        }
+      onSubmit={(values, { resetForm }) => {
+        mutate(values, {
+          onSuccess: () => resetForm(),
+        });
       }}
     >
       {({

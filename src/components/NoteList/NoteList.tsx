@@ -30,7 +30,7 @@ function NoteList({
         perPage,
         ...(search.trim() ? { search: search.trim() } : {}),
       });
-      return response.data;
+      return response;
     },
   });
 
