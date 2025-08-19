@@ -28,7 +28,7 @@ export interface FetchNotesResponse {
 export const fetchNotes = async (
   params: FetchNotesParams
 ): Promise<AxiosResponse<FetchNotesResponse>> => {
-  return api.get("/", { params });
+  return api.get("", { params });
 };
 
 export interface CreateNoteParams {
@@ -40,7 +40,7 @@ export interface CreateNoteParams {
 export const createNote = async (
   data: CreateNoteParams
 ): Promise<AxiosResponse<Note>> => {
-  return api.post("/", data);
+  return api.post("", data);
 };
 
 export const deleteNote = async (id: string): Promise<AxiosResponse<Note>> => {
