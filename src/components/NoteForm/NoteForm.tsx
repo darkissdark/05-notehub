@@ -1,4 +1,4 @@
-import { Formik, Form } from "formik";
+import { Formik, Form, ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
 import { createNote } from "../../services/noteService";
 import type { NoteTag } from "../../types/note";
@@ -46,62 +46,40 @@ const NoteForm = ({ onSuccess, onCancel }: NoteFormProps) => {
         });
       }}
     >
-      {({
-        isSubmitting,
-        values,
-        errors,
-        touched,
-        handleChange,
-        handleBlur,
-      }) => (
+      {({ isSubmitting }) => (
         <Form className={css.form}>
           <div className={css.formGroup}>
             <label htmlFor="title">Title</label>
-            <input
-              id="title"
-              type="text"
-              name="title"
-              className={css.input}
-              value={values.title}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            />
-            <span className={css.error}>{touched.title && errors.title}</span>
+            <Field id="title" name="title" className={css.input} />
+            <ErrorMessage name="title" component="span" className={css.error} />
           </div>
 
           <div className={css.formGroup}>
             <label htmlFor="content">Content</label>
-            <textarea
+            <Field
+              as="textarea"
               id="content"
               name="content"
               rows={8}
               className={css.textarea}
-              value={values.content}
-              onChange={handleChange}
-              onBlur={handleBlur}
             />
-            <span className={css.error}>
-              {touched.content && errors.content}
-            </span>
+            <ErrorMessage
+              name="content"
+              component="span"
+              className={css.error}
+            />
           </div>
 
           <div className={css.formGroup}>
             <label htmlFor="tag">Tag</label>
-            <select
-              id="tag"
-              name="tag"
-              className={css.select}
-              value={values.tag}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            >
+            <Field as="select" id="tag" name="tag" className={css.select}>
               {tags.map((tag) => (
                 <option key={tag} value={tag}>
                   {tag}
                 </option>
               ))}
-            </select>
-            <span className={css.error}>{touched.tag && errors.tag}</span>
+            </Field>
+            <ErrorMessage name="tag" component="span" className={css.error} />
           </div>
 
           <div className={css.actions}>
