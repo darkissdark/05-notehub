@@ -1,5 +1,10 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
+import {
+  fetchNotes,
+  type FetchNotesResponse,
+} from "../../services/noteService";
 import css from "./App.module.css";
 
 import NoteList from "../NoteList/NoteList";
@@ -7,13 +12,30 @@ import SearchBox from "../SearchBox/SearchBox";
 import Pagination from "../Pagination/Pagination";
 import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
+import Loader from "../Loader/Loader";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
 
 const App = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [totalPages, setTotalPages] = useState(1);
   const [debouncedSearch] = useDebounce(search, 500);
+
+  const { data, isLoading, isFetching, isError } = useQuery<
+    FetchNotesResponse,
+    Error
+  >({
+    queryKey: ["notes", { page, perPage: 12, search: debouncedSearch }],
+    queryFn: () => {
+      const response = fetchNotes({
+        page,
+        perPage: 12,
+        ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+      });
+      return response;
+    },
+    placeholderData: (previousData) => previousData,
+  });
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -27,18 +49,14 @@ const App = () => {
     setPage(newPage);
   };
 
-  const handleTotalPages = (pages: number) => {
-    setTotalPages(pages);
-  };
-
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
         <SearchBox value={search} onChange={handleSearch} />
-        {totalPages > 1 && (
+        {data && data.totalPages > 1 && (
           <Pagination
             page={page}
-            totalPages={totalPages}
+            totalPages={data.totalPages}
             onPageChange={handlePageChange}
           />
         )}
@@ -47,11 +65,11 @@ const App = () => {
         </button>
       </header>
       <main>
-        <NoteList
-          search={debouncedSearch}
-          page={page}
-          onTotalPages={handleTotalPages}
-        />
+        {(isLoading || isFetching) && <Loader />}
+        {isError && <ErrorMessage />}
+        {data?.notes && data.notes.length > 0 && !isFetching && (
+          <NoteList notes={data.notes} />
+        )}
       </main>
       {isModalOpen && (
         <Modal onClose={closeModal}>
